@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Be My Valentine?</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <style>
+    :root{ --pink-1:#ffe4ef; --pink-2:#ffc1dd; --pink-3:#ff8fbc; --text:#4a1f2b; --btn-yes:#ff3e8a; --shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; }
+    body{ font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji"; color:var(--text); background: radial-gradient(1000px 1000px at 20% 20%, var(--pink-2), var(--pink-1)); overflow:hidden; -webkit-tap-highlight-color:transparent; }
+    #app{ position:relative; min-height:100vh; min-height:100dvh; width:100%; display:grid; place-items:center; padding:24px; }
+    .card{ text-align:center; background:rgba(255,255,255,0.7); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); border:2px solid var(--pink-2); border-radius:18px; padding:28px 24px 40px; box-shadow:var(--shadow); max-width:680px; width:min(92vw,680px); touch-action:manipulation; }
+    h1{ margin:0 0 16px; font-size:clamp(24px,4vw,36px); line-height:1.2; }
+    p.sub{ margin:0 0 18px; opacity:.85; font-size:14px; }
+    .buttons{ display:inline-flex; align-items:center; justify-content:center; gap:14px; position:relative; flex-wrap:wrap; }
+    button{ border:0; border-radius:999px; padding:16px 28px; min-height:44px; min-width:44px; font-size:18px; font-weight:700; cursor:pointer; transition: transform .15s ease, box-shadow .15s ease, background-color .2s ease, color .2s ease; user-select:none; will-change: transform,left,top; }
+    button:active{ transform:scale(.98); }
+    #yesBtn{ background:var(--btn-yes); color:#fff; box-shadow:0 6px 20px rgba(255,62,138,.35); }
+    #yesBtn.grow{ transition:transform 180ms ease; }
+    #yesBtn:hover{ filter:brightness(1.05); }
+    #noBtn{ background:#e5e7eb; color:#111827; box-shadow:0 6px 20px rgba(0,0,0,.12); position:relative; z-index:3; }
+    #noBtn.sneaky{ position:absolute; transition:left 220ms ease, top 220ms ease, transform 200ms ease, opacity 200ms ease; touch-action:none; }
+    #overlay{ position:fixed; inset:0; display:grid; place-items:center; background: radial-gradient(1200px 800px at 50% 10%, rgba(255,255,255,0.9), rgba(255,255,255,0.85)), linear-gradient(180deg, var(--pink-2), var(--pink-3)); opacity:0; pointer-events:none; transform:scale(1.02); transition:opacity 300ms ease, transform 300ms ease; z-index:10; padding:20px; }
+    #overlay.show{ opacity:1; pointer-events:auto; transform:scale(1); }
+    .overlay-content{ text-align:center; color:#7a1238; padding:12px; max-width:860px; animation:pop 400ms cubic-bezier(.2,.8,.2,1); z-index:2; }
+    .overlay-title{ font-size:clamp(28px,6vw,48px); margin:0 0 10px; line-height:1.1; }
+    .overlay-sub{ font-size:clamp(16px,3.2vw,20px); margin:0 0 18px; opacity:.9; }
+    .photo-wrap{ display:inline-block; margin-top:10px; background:#fff; border-radius:16px; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,.15); }
+    .photo{ width:min(86vw,560px); max-height:70dvh; object-fit:cover; border-radius:12px; display:none; }
+    .photo.show{ display:block; animation:pop 320ms cubic-bezier(.2,.8,.2,1); }
+    .hearts{ position:absolute; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+    .heart{ position:absolute; color:#ff3e8a; opacity:.7; font-size:18px; animation:floatUp linear forwards; }
+    @keyframes floatUp{ from{ transform:translateY(20dvh) scale(.8); opacity:0; } 10%{ opacity:.8; } to{ transform:translateY(-110dvh) scale(1.2); opacity:0; } }
+    @keyframes pop{ 0%{ transform:scale(.95); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
+    @media (prefers-reduced-motion:reduce){ .heart{ animation:none !important; } #yesBtn.grow, #noBtn.sneaky, .photo.show, .overlay-content{ transition:none !important; animation:none !important; } }
+    .open-in-safari{ position:fixed; inset:0 auto auto 0; width:100%; background:rgba(255,255,255,.9); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); border-bottom:1px solid #ffd1e6; box-shadow:0 2px 12px rgba(0,0,0,.08); padding:10px 12px; display:none; align-items:center; gap:10px; z-index:1000; color:#7a1238; font:600 15px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Arial; }
+    .open-in-safari.show{ display:flex; }
+    .ois-spacer{ flex:1; }
+    .ois-btn{ border:0; border-radius:999px; padding:10px 14px; font-weight:700; font-size:14px; background:#ff3e8a; color:#fff; box-shadow:0 4px 14px rgba(255,62,138,.25); cursor:pointer; }
+    .ois-btn.secondary{ background:#f1f5f9; color:#0f172a; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    .ois-note{ display:block; width:100%; font-size:12px; color:#7a1238; opacity:.8; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div id="app" aria-live="polite">
+    <div class="card" id="card">
+      <h1>Can you be my Valentine?</h1>
+      <p class="sub">😊</p>
+      <div class="buttons" id="btnRow">
+        <button id="yesBtn" type="button" aria-label="Yes" class="grow">Yes</button>
+        <button id="noBtn"  type="button" aria-label="No">No</button>
+      </div>
+    </div>
+
+    <div id="overlay" role="dialog" aria-modal="true" aria-labelledby="yayTitle">
+      <div class="hearts" id="hearts"></div>
+      <div class="overlay-content">
+        <h2 class="overlay-title" id="yayTitle">Yay! you're my valentine now &lt;3</h2>
+        <p class="overlay-sub">💞</p>
+        <div class="photo-wrap">
+          <img id="yayPhoto" class="photo" alt="Our photo">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ois" class="open-in-safari" role="region" aria-label="Open in Safari notice">
+    <span>You're viewing this inside an app browser.</span>
+    <div class="ois-spacer"></div>
+    <button id="oisOpen" class="ois-btn" type="button">Open in Safari</button>
+    <button id="oisCopy" class="ois-btn secondary" type="button">Copy link</button>
+    <span id="oisNote" class="ois-note" hidden> If it doesn’t open, tap the three dots ••• and choose “Open in Safari”. </span>
+  </div>
+
+  <script>
+  (function(){
+    const app = document.getElementById('app');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn  = document.getElementById('noBtn');
+    const overlay = document.getElementById('overlay');
+    const hearts  = document.getElementById('hearts');
+    const yayPhoto = document.getElementById('yayPhoto');
+
+    const PHOTO_URL = "https://i.imgflip.com/2v16qk.jpg";
+    const preloadImg = new Image(); preloadImg.src = PHOTO_URL;
+
+    let sneakyMode = false;
+    let yesScale = 1.0;
+    let scale = 1.0;
+    const YES_GROWTH = 1.07;
+    const YES_MAX = 2.0;
+
+    function applyYesScale(){ yesBtn.style.transform = `scale(${Math.min(yesScale, YES_MAX)})`; }
+
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    function spawnHearts(count = 24){
+      hearts.innerHTML = "";
+      const viewW = window.innerWidth;
+      for (let i = 0; i < count; i++){
+        const span = document.createElement('span');
+        span.className = 'heart';
+        span.textContent = '❤';
+        const left = Math.random() * viewW;
+        const duration = randInt(5000, 9000);
+        const delay = randInt(0, 2000);
+        const size = randInt(14, 32);
+        const hueShift = randInt(-8, 8);
+        span.style.left = left + 'px';
+        span.style.bottom = '-10dvh';
+        span.style.fontSize = size + 'px';
+        span.style.filter = `hue-rotate(${hueShift}deg)`;
+        span.style.animationDuration = duration + 'ms';
+        span.style.animationDelay = delay + 'ms';
+        hearts.appendChild(span);
+      }
+    }
+
+    function moveNoButtonRandom(){
+      const appRect = app.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+      const pad = 12;
+      const maxLeft = Math.max(pad, appRect.width  - btnRect.width  - pad);
+      const maxTop  = Math.max(pad, appRect.height - btnRect.height - pad);
+      const newLeft = Math.random() * (maxLeft - pad) + pad;
+      const newTop  = Math.random() * (maxTop  - pad) + pad;
+      noBtn.style.left = `${newLeft}px`;
+      noBtn.style.top  = `${newTop}px`;
+    }
+
+    function ensureSneakyMode(){
+      if (sneakyMode) return;
+      sneakyMode = true;
+      const btnRect = noBtn.getBoundingClientRect();
+      const appRect = app.getBoundingClientRect();
+      noBtn.classList.add('sneaky');
+      noBtn.style.left = `${btnRect.left - appRect.left}px`;
+      noBtn.style.top  = `${btnRect.top  - appRect.top }px`;
+      app.appendChild(noBtn);
+    }
+
+    // --- Input mode detection ---
+    const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+    // MOBILE / TOUCH: dodge pre-tap (pointerdown/touchstart)
+    if (isCoarsePointer) {
+      const dodge = (e)=>{ e.preventDefault(); ensureSneakyMode(); maybeDodgeOnce(); };
+      noBtn.addEventListener('pointerdown', dodge, { passive:false });
+      noBtn.addEventListener('touchstart', dodge, { passive:false });
+    } else {
+      // DESKTOP / MOUSE: only move on explicit click attempts (no hover dodging)
+      noBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); ensureSneakyMode(); maybeDodgeOnce(); }, { passive:false });
+      noBtn.addEventListener('click', (e)=>{ e.preventDefault(); /* prevent actual click */ }, { passive:false });
+    }
+
+    // Move exactly once per attempt
+    function maybeDodgeOnce(){
+      moveNoButtonRandom();
+      yesScale *= YES_GROWTH; applyYesScale();
+      scale *= 0.92; noBtn.style.transform = `scale(${Math.max(scale, 0.6)})`;
+      if (scale <= 0.15){ noBtn.style.opacity = '0'; noBtn.style.pointerEvents = 'none'; setTimeout(()=> noBtn.style.display='none', 260); }
+    }
+
+    let resizeTO; window.addEventListener('resize', () => { if (!sneakyMode) return; clearTimeout(resizeTO); resizeTO = setTimeout(moveNoButtonRandom, 120); });
+
+    function showYay(){ yayPhoto.src = PHOTO_URL; yayPhoto.classList.add('show'); yayPhoto.alt = "Our photo"; overlay.classList.add('show'); spawnHearts(28); }
+    yesBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); showYay(); }, { passive: false });
+    yesBtn.addEventListener('click', showYay);
+  })();
+  </script>
+
+  <script>
+  (function(){
+    const canonical = document.querySelector('link[rel="canonical"]')?.href;
+    const og = document.querySelector('meta[property="og:url"]')?.content;
+    const PUBLIC_URL = og || canonical || window.location.href;
+    const ua = navigator.userAgent || '';
+    const inApp = /FBAN|FB_IAB|FBAV|Instagram|Line|LINE|Twitter|TikTok|LinkedIn|Snapchat|Pinterest|WeChat|Weibo/i.test(ua);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const banner = document.getElementById('ois');
+    const btnOpen = document.getElementById('oisOpen');
+    const btnCopy = document.getElementById('oisCopy');
+    const note = document.getElementById('oisNote');
+    if (inApp && !isStandalone) banner.classList.add('show');
+    function openInSafari(){ try{ const w=window.open(PUBLIC_URL,'_blank','noopener,noreferrer'); if(w){ note.hidden=false; return; } }catch(e){} try{ window.location.href=PUBLIC_URL; setTimeout(()=> note.hidden=false,400);}catch(e){ note.hidden=false; } }
+    async function copyLink(){ try{ await navigator.clipboard.writeText(PUBLIC_URL); btnCopy.textContent='Copied!'; setTimeout(()=> btnCopy.textContent='Copy link',1500);}catch(e){ const ok=window.prompt('Copy this link:', PUBLIC_URL); if(ok!==null){ btnCopy.textContent='Copied?'; setTimeout(()=> btnCopy.textContent='Copy link',1500);} } }
+    btnOpen && btnOpen.addEventListener('click', openInSafari);
+    btnCopy && btnCopy.addEventListener('click', copyLink);
+  })();
+  </script>
+</body>
+</html>
